@@ -4,11 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:accessibilityHeading="false"
-    tools:context=".UCDeCodeEditActivity">
+    tools:context=".UCEnCodeEditActivity">
 
     <EditText
-        android:id="@+id/edtmlUCDeCode"
+        android:id="@+id/edtmlUCEnCode"
         android:layout_width="373dp"
         android:layout_height="646dp"
         android:ems="10"
@@ -18,7 +17,7 @@
         tools:layout_editor_absoluteY="19dp" />
 
     <Button
-        android:id="@+id/btnDeCodeSave"
+        android:id="@+id/btnEeCodeSave"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="保存"

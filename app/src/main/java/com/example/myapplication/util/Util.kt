@@ -1,6 +1,9 @@
 package com.example.myapplication.util
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 
 class Util {
 
@@ -11,6 +14,14 @@ class Util {
 
         fun logD(str: String, tag: String = TAG){
             Log.d(tag, str)
+        }
+
+        fun toastShort(context: Context, str: String){
+            Toast.makeText(context, str, Toast.LENGTH_SHORT).show()
+        }
+
+        fun toastLong(context: Context, str: String){
+            Toast.makeText(context, str, Toast.LENGTH_LONG).show()
         }
 
         /**
@@ -138,6 +149,10 @@ class Util {
             return deCodeString
         }
 
+        fun iniDeCodePro(){
+
+        }
+
         /**
          * 遍历每行的每个的字符，并判断此字符是否可以进行转换，是则转换，否则记录
          * @param lines 需要转换的字符串集合
@@ -167,6 +182,17 @@ class Util {
                 }
             }
             return enCodeString
+        }
+
+
+        // 将Path转换为Android/Data/... Uri
+        fun toAndroidDataUrl(path: String): Uri {
+            var paths: List<String> = path.replace("/storage/emulated/0/Android/data", "").split("/")
+            var stringBuilder = StringBuilder("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata/document/primary%3AAndroid%2Fdata")
+            for (path in paths) {
+                stringBuilder.append("%2F").append(path)
+            }
+            return Uri.parse(stringBuilder.toString())
         }
 
     }

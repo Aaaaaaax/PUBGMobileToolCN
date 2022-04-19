@@ -1,56 +1,60 @@
 package com.example.myapplication
 
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.Toast
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
-import com.example.myapplication.databinding.ActivityMainBinding
 import com.example.myapplication.util.Util
-import java.io.*
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
-    // Android/data Uri
-    private val androidDataUri = "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata"
-    // 需要访问的Android/data目录下的具体文件
-    private val pubgmdUCiniPath = "/storage/emulated/0/Android/data/com.tencent.tmgp.pubgmhd/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
-    // 完整的访问Uri
-    private val pubgmdUCiniUri: Uri = toAndroidDataUrl()
+    companion object{
+        // Android/data Uri
+        val androidDataUri = "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata"
+        // 需要访问的Android/data目录下的具体文件
+        val pubgmdUCiniFilePath = "/storage/emulated/0/Android/data/com.tencent.tmgp.pubgmhd/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
+        // 完整的访问Uri
+        val pubgmdUCiniUri: Uri = Util.toAndroidDataUrl(pubgmdUCiniFilePath)
+    }
 
     private lateinit var launcherUCEdit: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        findViewById<Button>(R.id.btnUCEdit).setOnClickListener(this)
+        findViewById<Button>(R.id.btnUCDeCodeEdit).setOnClickListener(this)
+        findViewById<Button>(R.id.btnUCEnCodeEdit).setOnClickListener(this)
         if(isGrantAndroidData()) else requestAccessAndroidData()
 
         launcherUCEdit = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
-            contentResolver.takePersistableUriPermission(
-                it?.data!!.data!!, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-            Toast.makeText(this,"授权成功",Toast.LENGTH_SHORT).show()
+
+            if(it.resultCode == RESULT_OK){
+                contentResolver.takePersistableUriPermission(
+                    it?.data!!.data!!, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+                Util.toastShort(this,"授权成功!")
+            }else{
+                Util.toastShort(this,"授权失败!")
+            }
         }
 
     }
 
     override fun onClick(p0: View?) {
         when(p0?.id){
-            R.id.btnUCEdit-> {
-                val intent = Intent(this, UCEditActivity::class.java)
+            R.id.btnUCDeCodeEdit-> {
+                val intent = Intent(this, UCDeCodeEditActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.btnUCEnCodeEdit-> {
+                val intent = Intent(this, UCEnCodeEditActivity::class.java)
                 startActivity(intent)
             }
         }
@@ -79,20 +83,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 Util.logD("isGrantAndroidData True")
                 return true
             }
-            Util.logD("isGrantAndroidData False")
         }
+        Util.logD("isGrantAndroidData False")
         return false
-    }
-
-
-    // 将Path转换为Uri
-    private fun toAndroidDataUrl(): Uri{
-        var paths: List<String> = pubgmdUCiniPath.replace("/storage/emulated/0/Android/data", "").split("/")
-        var stringBuilder = StringBuilder("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata/document/primary%3AAndroid%2Fdata")
-        for (s in paths) {
-            stringBuilder.append("%2F").append(s)
-        }
-        return Uri.parse(stringBuilder.toString())
     }
 
 }

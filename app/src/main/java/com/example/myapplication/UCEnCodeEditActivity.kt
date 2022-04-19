@@ -3,24 +3,21 @@ package com.example.myapplication
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import androidx.documentfile.provider.DocumentFile
 import com.example.myapplication.util.Util
 import java.io.*
-import java.lang.Exception
-import kotlin.math.log
 
-class UCEditActivity : AppCompatActivity(), View.OnClickListener{
+class UCEnCodeEditActivity : AppCompatActivity(), View.OnClickListener{
 
     // 需要访问的Android/data目录下的具体文件
     private val pubgmdUCiniFilePath = "/storage/emulated/0/Android/data/com.tencent.tmgp.pubgmhd/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
     // 需要访问的Android/data目录下的具体目录
     private val pubgmdUCiniFilesPath = "/storage/emulated/0/Android/data/com.tencent.tmgp.pubgmhd/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android"
     // 完整的访问Uri
-    private val pubgmdUCiniUri: Uri = toAndroidDataUrl(pubgmdUCiniFilePath)
+    private val pubgmdUCiniUri: Uri = Util.toAndroidDataUrl(pubgmdUCiniFilePath)
 
     private val pubgmdUCiniDeMap = mapOf("18" to "a","1B" to "b","1A" to "c","1D" to "d","1C" to "e","1F" to "f","1E" to "g","11" to "h",
         "10" to "i","13" to "j","12" to "k","15" to "l","14" to "m","17" to "n","16" to "o","09" to "p","08" to "q",
@@ -75,29 +72,35 @@ class UCEditActivity : AppCompatActivity(), View.OnClickListener{
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_ucedit)
-        findViewById<Button>(R.id.btnSave).setOnClickListener(this)
+        setContentView(R.layout.activity_import_ucactivity)
+        findViewById<Button>(R.id.btnEeCodeSave).setOnClickListener(this)
         readUCText()
     }
 
     override fun onClick(p0: View?) {
         when(p0?.id){
-            R.id.btnSave -> {
-//                var ucTextLines = findViewById<EditText>(R.id.edtmlUC).text.toString().split("\n")
-                var ucTextLines = findViewById<EditText>(R.id.edtmlUC).text.toString()
-//                var iniEnCodeText = Util.iniEnCode(ucTextLines, pubgmdUCiniEnMap)
+            R.id.btnEeCodeSave -> {
+                var ucTextLines = findViewById<EditText>(R.id.edtmlUCEnCode).text.toString()
 
                 val documentFile: DocumentFile = DocumentFile.fromSingleUri(this, pubgmdUCiniUri)!!
                 Util.logD(documentFile.type.toString())
-                val documentFileParent: DocumentFile = DocumentFile.fromTreeUri(this, toAndroidDataUrl(pubgmdUCiniFilesPath))!!
+                val documentFileParent: DocumentFile = DocumentFile.fromTreeUri(this, Util.toAndroidDataUrl(pubgmdUCiniFilesPath))!!
                 documentFile.delete()
                 val ucFile = documentFileParent.createFile("application/octet-stream","UserCustom.ini")
                 var output: OutputStream
                 var writer: BufferedWriter? = null
+                var backUpFlg = false
                 try {
+                    if (ucTextLines.indexOf("[BackUp DeviceProfile]") <= -1){
+                        backUpFlg = true
+                    }
                     output = contentResolver.openOutputStream(ucFile!!.uri)!!
                     writer = BufferedWriter(OutputStreamWriter(output))
-                    writer.write(ucTextLines+"\n"+backUpIni)
+                    if (backUpFlg) {
+                        writer.write(ucTextLines+"\n"+backUpIni)
+                    }else{
+                        writer.write(ucTextLines)
+                    }
                     writer.flush()
                     writer?.close()
                 }catch (e: IOException){
@@ -109,7 +112,7 @@ class UCEditActivity : AppCompatActivity(), View.OnClickListener{
     }
 
     private fun readUCText(){
-            val documentFile: DocumentFile = DocumentFile.fromSingleUri(this, pubgmdUCiniUri)!!
+        val documentFile: DocumentFile = DocumentFile.fromSingleUri(this, pubgmdUCiniUri)!!
         Util.logD("pubgmdUCiniUri: $pubgmdUCiniUri \n file name: ${documentFile.name}\n" +
                 " file path: ${documentFile.uri.path} \n" +
                 " file encodedPath: ${documentFile.uri.encodedPath}")
@@ -125,25 +128,9 @@ class UCEditActivity : AppCompatActivity(), View.OnClickListener{
             reader?.close()
             e.printStackTrace()
         }
-//            val output: OutputStream = contentResolver.openOutputStream(documentFile.uri)!!
-//            val writer: BufferedWriter = BufferedWriter(OutputStreamWriter(output))
-        if(lines?.size!! > 0){
-            var ucStr = Util.iniDeCodeAll(lines,pubgmdUCiniDeMap)
-            findViewById<EditText>(R.id.edtmlUC).setText(ucStr)
-            Util.logD(ucStr)
-        }else{
-            Util.logD("ini lines size < 0 !!!")
-        }
-    }
 
-    // 将Path转换为Android/Data/... Uri
-    private fun toAndroidDataUrl(path: String): Uri{
-        var paths: List<String> = path.replace("/storage/emulated/0/Android/data", "").split("/")
-        var stringBuilder = StringBuilder("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata/document/primary%3AAndroid%2Fdata")
-        for (s in paths) {
-            stringBuilder.append("%2F").append(s)
-        }
-        return Uri.parse(stringBuilder.toString())
+        findViewById<EditText>(R.id.edtmlUCEnCode).setText(lines.toString())
+
     }
 
 }
